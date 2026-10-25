@@ -2,13 +2,15 @@ import torch
 from engine import Value
 
 def test_sanity_check():
-    x=Value(-4,0)
+    x=Value(-4.0)
     z=2*x+2+x
     q=z.relu()+z*x
     h=(z*z).relu()
     y=h+q+q*x
     y.backward()
     xmg,ymg=x,y
+    print(f"xmg:{xmg},ymg:{ymg}")
+
 #为什么中间用激活函数？
 #激活函数是神经网络中的一种非线性函数，用于引入非线性特性，
 # 使神经网络能够学习复杂的模式。
@@ -40,6 +42,7 @@ def test_sanity_check():
     y.backward()
     xpt,ypt=x,y
 
+    print(f"xpt:{xpt},ypt:{ypt}")
     #forward pass went well
     assert ymg.data==ypt.data.item()
     #backward pass went well
@@ -67,6 +70,7 @@ def test_more_ops():
     g+=10.0/f
     g.backward()
     amg,bmg,gmg=a,b,g
+    print(f"amg:{amg},bmg:{bmg},gmg:{gmg}")
 
     a=torch.Tensor([-4.0]).double()
     b=torch.Tensor([2.0]).double()
@@ -84,6 +88,7 @@ def test_more_ops():
     g=g+10.0/f
     g.backward()
     apt,bpt,gpt=a,b,g
+    print(f"apt:{apt},bpt:{bpt},gpt:{gpt}")
 
     tol=1e-6
     #tol的作用是什么？
@@ -94,3 +99,9 @@ def test_more_ops():
     assert abs(gmg.data-gpt.data.item())<tol
     assert abs(amg.grad-apt.grad.item())<tol
     assert abs(bmg.data-bpt.data.item())<tol
+
+
+if __name__=="__main__":
+    test_sanity_check()
+    test_more_ops()
+    print("All tests passed!")

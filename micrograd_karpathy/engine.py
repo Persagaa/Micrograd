@@ -1,16 +1,16 @@
 class Value:
     """stores a single scalar value and its gradient"""
     """存储一个单独的标量值及其梯度"""
-    def __init__(self,data,_chlidren=(),_op=''):
-        self,data=data
-        self.grad=0
+    def __init__(self, data, _children=(), _op=''):
+        self.data = data
+        self.grad = 0.0                   
         #internal variables used for autograd graph construction
         #用于自动梯度图构建的内部变量
-        self._backward=lambda:None
+        self._backward = lambda: None
         #为什么这些变量前面有_？
         #_表示这些变量是私有的，不应该被外部访问
-        self._prev=set(_chlidren)
-        self._op=_op 
+        self._prev = set(_children)
+        self._op = _op
         #the op that produced this node,for graphviz / debugging /etc
         #生成此节点的操作，用于graphviz/调试等
         #graphviz是一个用于可视化图形的工具
@@ -44,7 +44,7 @@ class Value:
         #assert语句用于检查一个条件是否为真，如果为假，则抛出一个AssertionError异常
         out=Value(self.data**other,(self,),f'**{other}')
         def _backward():
-            self.grad+=(other*self.data**(other.data-1))*out.grad
+            self.grad+=(other*self.data**(other-1))*out.grad
         out._backward=_backward
         return out
 
@@ -117,13 +117,13 @@ class Value:
     def __rsub__(self,other): #other-self
         return other+(-self)
 
-    def __rmul__(slef,other):#self*other
-        return other*self
+    def __rmul__(self,other):#other*self
+        return self*other
 
     def __truediv__(self,other):#self/other
         return self*other**-1
 
-    def __rturediv__(self,other):#other/self
+    def __rtruediv__(self,other):#other/self
         return other*self**-1
 
     def __repr__(self):
