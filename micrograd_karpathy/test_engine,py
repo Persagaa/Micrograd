@@ -1,0 +1,96 @@
+import torch
+from engine import Value
+
+def test_sanity_check():
+    x=Value(-4,0)
+    z=2*x+2+x
+    q=z.relu()+z*x
+    h=(z*z).relu()
+    y=h+q+q*x
+    y.backward()
+    xmg,ymg=x,y
+#为什么中间用激活函数？
+#激活函数是神经网络中的一种非线性函数，用于引入非线性特性，
+# 使神经网络能够学习复杂的模式。
+# 在这个例子中，relu函数用于将输入值限制在非负范围内，
+# 从而引入非线性特性。
+#relu和tanh哪个更好？
+#relu函数和tanh函数都是常用的激活函数，它们各有优缺点。
+#relu函数的优点是计算简单，收敛速度快，但在训练深层神经网络时容易出现梯度消失问题。
+#tanh函数的优点是输出值在-1到1之间，可以更好地表示数据的范围，但在计算上比relu函数复杂。
+#因此，选择哪个激活函数取决于具体的应用场景和需求。
+#relu求导怎么算？
+#relu函数的导数可以通过以下方式计算：
+#如果输入x大于0，则relu函数的导数为1；
+#如果输入x小于等于0，则relu函数的导数为0。
+#因此，relu函数的导数可以表示为：
+#f'(x) = 1 if x > 0
+#f'(x) = 0 if x <= 0
+
+#为什么用了pyTorch还要用Value
+#PyTorch是一个深度学习框架，它提供了许多用于构建和训练神经网络的工具和函数。
+#Value类是一个自定义的类，用于表示一个数值对象，它具有一些与数值计算相关的属性和方法。
+#在这个例子中，Value类用于表示一个数值对象x，并将其与PyTorch的Tensor对象进行比较。
+    x=torch.Tensor([-4.0]).double()
+    x.requires_grad=True
+    z=2*x+2+x
+    q=z.relu()+z*x
+    h=(z*z).relu()
+    y=h+q+q*x
+    y.backward()
+    xpt,ypt=x,y
+
+    #forward pass went well
+    assert ymg.data==ypt.data.item()
+    #backward pass went well
+    assert xmg.grad==xpt.grad.item()
+
+    #assert的作用是什么？
+    #assert是Python中的一个关键字，用于进行断言检查。
+    #它用于检查某个条件是否为真，如果条件为假，则抛出一个AssertionError异常。
+    #assert语句通常用于调试和测试代码，以确保代码的正确性。
+    #assert语句的语法如下：
+    #assert condition
+
+def test_more_ops():
+    a=Value(-4.0)
+    b=Value(2.0)
+    c=a+b
+    d=a*b+b**3
+    c+=c+1
+    c+=1+c+(-a)
+    d+=d*2+(b+a).relu()
+    d+=3*d+(b-a).relu()
+    e=c-d
+    f=e**2
+    g=f/2.0
+    g+=10.0/f
+    g.backward()
+    amg,bmg,gmg=a,b,g
+
+    a=torch.Tensor([-4.0]).double()
+    b=torch.Tensor([2.0]).double()
+    a.requires_grad=True
+    b.requires_grad=True
+    c=a+b
+    d=a*b+b**3
+    c=c+c+1
+    c=c+1+c+(-a)
+    d=d+d*2+(b+a).relu()
+    d=d+3*d+(b-a).relu()
+    e=c-d
+    f=e**2
+    g=f/2.0
+    g=g+10.0/f
+    g.backward()
+    apt,bpt,gpt=a,b,g
+
+    tol=1e-6
+    #tol的作用是什么？
+    #tol是tolerance的缩写，表示容差或误差范围。
+    #在计算中，tol用于指定允许的误差范围，以判断计算结果是否满足要求。
+    #例如，在数值计算中，如果计算结果的误差小于tol，则认为计算是准确的。
+
+    assert abs(gmg.data-gpt.data.item())<tol
+    assert abs(amg.grad-apt.grad.item())<tol
+    assert abs(bmg.data-bpt.data.item())<tol
